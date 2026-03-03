@@ -22,19 +22,26 @@ app.post("/generate", upload.fields([
     form.append("mask", fs.createReadStream(req.files.mask[0].path));
 
     const response = await axios.post(
-      "https://iteratively-unrespirable-elvera.ngrok-free.dev/generate", 
+      "https://iteratively-unrespirable-elvera.ngrok-free.dev/generate",
       form,
       {
         headers: form.getHeaders(),
-        responseType: "arraybuffer"
+        responseType: "arraybuffer",
+        timeout: 300000,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       }
     );
 
     res.set("Content-Type", "image/png");
     res.send(response.data);
 
+    // Cleanup
+    fs.unlinkSync(req.files.image[0].path);
+    fs.unlinkSync(req.files.mask[0].path);
+
   } catch (error) {
-    console.error(error);
+    console.error("FULL ERROR:", error.response?.data || error.message);
     res.status(500).send("Error generating image");
   }
 });
